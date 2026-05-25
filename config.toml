@@ -1,5 +1,6 @@
 [credentials]
 # your campus network account
-user="201200362"
+username=""
 # your campus network password
-password="123123123"
+password=""
+
