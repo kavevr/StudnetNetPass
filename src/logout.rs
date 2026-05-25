@@ -1,8 +1,8 @@
-use crate::config;
+use log::info;
 use reqwest::{
     Client,
     header::{
-        ACCEPT, ACCEPT_ENCODING, ACCEPT_LANGUAGE, CONNECTION, CONTENT_TYPE, COOKIE, HOST,
+        ACCEPT, ACCEPT_ENCODING, ACCEPT_LANGUAGE, CONNECTION, CONTENT_TYPE, HOST,
         HeaderMap, ORIGIN, REFERER, UPGRADE_INSECURE_REQUESTS, USER_AGENT,
     },
 };
@@ -49,24 +49,35 @@ pub fn headers() -> HeaderMap {
 
 pub const PATH: &str = "http://10.255.254.2:8080/zportal/logout";
 
-pub fn body(username: &str) -> &str {
-
-"userName=202300648&userIp=10.243.192.199&deviceIp=10.255.254.254&service.id=&autoLoginFlag=false&userMac=f6901cdeecc7&operationType=&isMacFastAuth=false"
-
-}
-
 pub async fn logout() -> anyhow::Result<()> {
-    let app_config = config::get().credentials();
-    let username = app_config.username();
+
+    // let app_config = config::get().credentials();
+    // let username = &app_config.username;
+
+   let payload =  "userName=202300648&userIp=10.243.192.199&deviceIp=10.255.254.254&service.id=&autoLoginFlag=false&userMac=f6901cdeecc7&operationType=&isMacFastAuth=false";
+
 
     let rsp = Client::builder()
         .build()?
         .post(PATH)
         .headers(headers())
-        .body(body(username))
+        .body(payload)
         .send()
         .await?;
-    let data = rsp.text().await?;
-    println!("{data}");
+
+    if rsp.status() == 200 {
+        info!("----------------------RESPONSE HEADER--------------------------------------------------------------");
+
+        for (k, v) in rsp.headers() {
+            info!("{:?}: {:?}", k, v);
+        }
+        info!("----------------------------------------------------------------------------------------------------");
+
+        info!(
+            "Body Length: [{}]",
+            rsp.content_length().expect("未能获取到内容.")
+        );
+        info!("下线啦!")
+    }
     Ok(())
 }

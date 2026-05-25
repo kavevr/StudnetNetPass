@@ -18,15 +18,15 @@ pub struct Credentials {
 static CONFIG: LazyLock<AppConfig> =
     LazyLock::new(|| AppConfig::load().expect("Failed to initailize config"));
 
-impl Credentials {
-    pub fn username(&self) -> &str {
-        self.username.as_deref().unwrap_or("202300555")
-    }
+// impl Credentials {
+//     pub fn username(&self) -> &str {
+//         self.username.as_deref().unwrap_or("202300555")
+//     }
 
-    pub fn password(&self) -> &str {
-        self.password.as_deref().unwrap_or("12345678")
-    }
-}
+//     pub fn password(&self) -> &str {
+//         self.password.as_deref().unwrap_or("12345678")
+//     }
+// }
 
 impl AppConfig {
     pub fn load() -> anyhow::Result<Self> {
