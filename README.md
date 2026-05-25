@@ -1,6 +1,8 @@
 # 介绍
 
-一键登录到校园内网
+一键登录到校园内网，该工具仅用于登录和登出的用途
+
+## 演示
 
 ## 使用方法
 
@@ -35,8 +37,6 @@ studnetnetpass logout
 #### 客户端环境
 
 - https://github.com/xtls/xray-core#gui-clients
-
-连接在非认证区域的服务器
 
 
 ## 工作原理
