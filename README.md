@@ -104,3 +104,6 @@ cargo build --release
 - https://github.com/xtls/xray-core#gui-clients
 
 ![pic](./resources/workflow.png)
+
+
+  在非认证区域部署一个中转服务器，并通过认证区域内的客户端与之建立连接，在配置基本的网络策略（如转发、路由或代理规则）后，即可实现合规的免费互联网访问。
