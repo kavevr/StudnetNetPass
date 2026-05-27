@@ -51,9 +51,6 @@ pub const PATH: &str = "http://10.255.254.2:8080/zportal/logout";
 
 pub async fn logout() -> anyhow::Result<()> {
 
-    // let app_config = config::get().credentials();
-    // let username = &app_config.username;
-
    let payload =  "userName=202300648&userIp=10.243.192.199&deviceIp=10.255.254.254&service.id=&autoLoginFlag=false&userMac=f6901cdeecc7&operationType=&isMacFastAuth=false";
 
 

@@ -1,17 +1,15 @@
 use crate::common::LoginPostPaylod;
 use crate::common::fetch_portal_url;
-
 use log::info;
 use reqwest::{
     Client,
     header::{
-        ACCEPT, ACCEPT_ENCODING, ACCEPT_LANGUAGE, CONNECTION, CONTENT_TYPE, HOST,
-        HeaderMap, ORIGIN, REFERER, USER_AGENT,
+        ACCEPT, ACCEPT_ENCODING, ACCEPT_LANGUAGE, CONNECTION, CONTENT_TYPE, HOST, HeaderMap,
+        ORIGIN, REFERER, USER_AGENT,
     },
 };
 
 pub async fn headers() -> HeaderMap {
-    
     let url = fetch_portal_url().await.unwrap();
     let host = format!("{}:{}", url.host().unwrap(), url.port().unwrap());
 
@@ -55,24 +53,30 @@ pub async fn headers() -> HeaderMap {
 pub const PATH: &str = "http://10.255.254.2:8080/zportal/login/do";
 
 pub async fn login() -> anyhow::Result<()> {
-
-    info!("正在登录中");
+    info!("正在登录中......");
 
     let rsp = Client::builder()
         .build()?
         .post(PATH)
         .headers(headers().await)
-        .body(LoginPostPaylod::get_login_post_payload().await?)
+        .body(LoginPostPaylod::get_login_payload().await?)
         .send()
         .await?;
 
     if rsp.status() == 200 {
-        info!("登录成功啦");
-        info!("{:?}",rsp.headers());
-        info!("{}",rsp.text().await?);
-    }
+        info!(
+            "----------------------RESPONSE HEADER--------------------------------------------------------------"
+        );
 
-    // let data = rsp.text().await?;
-    // println!("{data}");
+        for (k, v) in rsp.headers() {
+            info!("{k:?} : {v:?}")
+        }
+        info!(
+            "----------------------------------------------------------------------------------------------------"
+        );
+
+        info!("登录成功啦!");
+        info!("{}", rsp.text().await?);
+    }
     Ok(())
 }
