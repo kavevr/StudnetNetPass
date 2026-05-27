@@ -1,6 +1,5 @@
-use crate::common::LoginPostPaylod;
-use crate::common::fetch_portal_url;
-use log::info;
+use crate::common::{fetch_portal_url, LoginPostPaylod, NetAuthorization, SessionInfo};
+use log::{debug, info};
 use reqwest::{
     Client,
     header::{
@@ -8,9 +7,9 @@ use reqwest::{
         ORIGIN, REFERER, USER_AGENT,
     },
 };
+use url::Url;
 
-pub async fn headers() -> HeaderMap {
-    let url = fetch_portal_url().await.unwrap();
+fn build_headers(url: &Url) -> HeaderMap {
     let host = format!("{}:{}", url.host().unwrap(), url.port().unwrap());
 
     let mut h = HeaderMap::new();
@@ -38,45 +37,49 @@ pub async fn headers() -> HeaderMap {
     h.insert("X-Requested-With", "XMLHttpRequest".parse().unwrap());
     h.insert(ORIGIN, format!("http://{}", host).parse().unwrap());
     h.insert(CONNECTION, "keep-alive".parse().unwrap());
-
-    h.insert(REFERER, url.to_string().parse().unwrap());
-    // h.insert(
-    //     COOKIE,
-    //     "JSESSIONID=E18205121D5F677E316360238A256BEB; failCounter=0"
-    //         .parse()
-    //         .unwrap(),
-    // );
+    h.insert(REFERER, url.as_str().parse().unwrap());
     h.insert("Priority", "u=0".parse().unwrap());
     h
 }
 
-pub const PATH: &str = "http://10.255.254.2:8080/zportal/login/do";
+const PATH: &str = "http://10.255.254.2:8080/zportal/login/do";
 
 pub async fn login() -> anyhow::Result<()> {
     info!("正在登录中......");
 
+    let portal_url = fetch_portal_url().await?;
+    let net_auth = NetAuthorization::from_url(&portal_url)?;
+
     let rsp = Client::builder()
         .build()?
         .post(PATH)
-        .headers(headers().await)
-        .body(LoginPostPaylod::get_login_payload().await?)
+        .headers(build_headers(&portal_url))
+        .body(LoginPostPaylod::get_login_payload(&net_auth)?)
         .send()
         .await?;
 
     if rsp.status() == 200 {
-        info!(
-            "----------------------RESPONSE HEADER--------------------------------------------------------------"
-        );
+        let cookie_headers = rsp.headers().get_all("set-cookie");
+        let cookie_strs: Vec<String> = cookie_headers
+            .iter()
+            .filter_map(|v| v.to_str().ok().map(String::from))
+            .collect();
 
-        for (k, v) in rsp.headers() {
-            info!("{k:?} : {v:?}")
+        if let Some(session) = SessionInfo::from_login_response(&cookie_strs, &net_auth.mac) {
+            session.save()?;
+            info!("会话信息已保存，可执行 logout 下线");
+        } else {
+            info!("未检测到 userIndex cookie，不影响登录");
         }
-        info!(
-            "----------------------------------------------------------------------------------------------------"
-        );
 
-        info!("登录成功啦!");
-        info!("{}", rsp.text().await?);
+        debug!("--- RESPONSE HEADERS ---");
+        for (k, v) in rsp.headers() {
+            debug!("{k:?} : {v:?}")
+        }
+        debug!("------------------------");
+
+        let body = rsp.text().await?;
+        info!("登录成功! {}", body);
     }
     Ok(())
 }
